@@ -70,17 +70,94 @@ def play_n_matches(p1, p2, n):
     return p1_victories, p2_victories
 
 
+def calculate_size(p):
+    x=p.toString()
+    y=x.count('NumberAdvancedThisRound')+x.count('NumberAdvancedByAction')+ x.count('IsNewNeutral')+ x.count('marker')+ x.count('progress_value')+ x.count('move_value')+ x.count('neutrals')+ x.count('actions')+ x.count('lambda')+ x.count('map')+ x.count('sum')+ x.count('argmax')+ x.count('+')+ x.count('-')+ x.count('*')
+    return y
+class bus:
+    def __init__(self):
+        self.f=open("a.txt", "w")
+        self.dict={}
+        self.evaluated=0
+        self.generated=0
+        self.out=set()
+        self.mark=0
+
+
+    def grow(self, plist, operation,size):
+        new_plist =  []
+
+        for op in operation:
+            op.grow(plist, new_plist,self.dict,size)
+        for i in new_plist:
+            if(i.toString() not in self.out):
+                self.out.add(i.toString())
+                print(i.toString(), file=self.f)
+                if(size<7):
+                    x=calculate_size(i)
+                    if(x in self.dict.keys()):
+                        self.dict[x].append(i)
+                    else:
+                        self.dict[x]=[]
+                        self.dict[x].append(i)
+
+                plist.append(i)
+
+
+
+
+
+    def synthesize(self,n,operation, state, values, functions, eval, programs_not_to_eval):
+        plist=[]
+        for i in functions:
+            plist.append(i())
+        plist.append(VarScalar('marker'))
+        for i in values:
+            plist.append(VarScalarFromArray(i))
+        for i in state:
+            plist.append(VarList(i))
+
+
+        self.dict[1]=[]
+        for i in plist:
+            self.dict[1].append(i)
+        for i in range(n):
+            print(i)
+            print(i, file=self.f)
+            print(len(plist))
+            self.grow(plist,operation,i+2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":    
     
     program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))), VarList('neutrals')))
     program_decide_column = Argmax(Map(Function(Sum(Map(Function(Minus(Times(NumberAdvancedByAction(), VarScalarFromArray('move_value')), Times(VarScalar('marker'), IsNewNeutral()))), None))), VarList('actions')))
-    
+    print(program_decide_column.toString())
     p1 = RandomPlayer()
+    #p1 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
     p2 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
-    
+
+    b=bus()
+    b.synthesize(17,[Sum, Map, Argmax, Function, Plus, Times, Minus],['neutrals', 'actions'],['progress_value', 'move_value'],[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral],5,10)
+
     victories1 = 0
     victories2 = 0
-    
     start = time.time()
     
     victories1, victories2 = play_n_matches(p1, p2, 500)

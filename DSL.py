@@ -175,6 +175,38 @@ class NumberAdvancedThisRound(Node):
                     counter += len(list_of_cells) - previously_conquered
         return counter
 
+
+#this code to find the combination of the numbers upto the max_cost  has been taken from GeekforGeeks
+#link: https://www.geeksforgeeks.org/combinational-sum/
+def combinationSum(candidates, target):
+    result = []
+    unique = {}
+    candidates = list(set(candidates))
+    solve(candidates, target, result, unique)
+    return result
+
+
+def solve(candidates, target, result, unique, i=0, current=[]):
+    if target == 0:
+        temp = [i for i in current]
+        temp1 = temp
+        temp.sort()
+        temp = tuple(temp)
+        if temp not in unique:
+            unique[temp] = 1
+            result.append(temp1)
+        return
+    if target < 0:
+        return
+    for x in range(i, len(candidates)):
+        current.append(candidates[x])
+        solve(candidates, target - candidates[x], result, unique, i, current)
+        current.pop(len(current) - 1)
+
+
+
+
+
 class Times(Node):
     def __init__(self, left, right):
         super(Times, self).__init__()
@@ -188,6 +220,25 @@ class Times(Node):
     def interpret(self, env):
         return self.left.interpret(env) * self.right.interpret(env)
 
+    def grow(plist, new_plist, dict, size):
+        if(size<7):
+            l1 = []
+            for i in dict.keys():
+                l1.append(i)
+            l2 = []
+            l2 = combinationSum(l1, size)
+            for i in l2:
+                if (len(i) == 2):
+                    p1 = dict[i[0]]
+                    p2 = dict[i[1]]
+                    for x in p1:
+                        if (not isinstance(x, VarList)and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                            for y in p2:
+                                if (not isinstance(y, VarList)and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
+                                    new_plist.append(Times(x, y))
+
+
+
 class Minus(Node):
     def __init__(self, left, right):
         super(Minus, self).__init__()
@@ -200,6 +251,23 @@ class Minus(Node):
     
     def interpret(self, env):
         return self.left.interpret(env) - self.right.interpret(env)
+
+    def grow(plist, new_plist, dict, size):
+        if (size < 7):
+            l1 = []
+            for i in dict.keys():
+                l1.append(i)
+            l2 = []
+            l2 = combinationSum(l1, size)
+            for i in l2:
+                if (len(i) == 2):
+                    p1 = dict[i[0]]
+                    p2 = dict[i[1]]
+                    for x in p1:
+                        if (not isinstance(x, VarList)and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                            for y in p2:
+                                if (not isinstance(y, VarList)and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
+                                    new_plist.append(Minus(x, y))
     
 
 class Plus(Node):
@@ -214,7 +282,24 @@ class Plus(Node):
     
     def interpret(self, env):
         return self.left.interpret(env) + self.right.interpret(env)
-    
+
+    def grow(plist, new_plist, dict, size):
+        if (size < 7):
+            l1 = []
+            for i in dict.keys():
+                l1.append(i)
+            l2 = []
+            l2 = combinationSum(l1, size)
+            for i in l2:
+                if (len(i) == 2):
+                    p1 = dict[i[0]]
+                    p2 = dict[i[1]]
+                    for x in p1:
+                        if (not isinstance(x, VarList)and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                            for y in p2:
+                                if (not isinstance(y, VarList)and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
+                                    new_plist.append(Plus(x, y))
+
 
 class Function(Node):
     def __init__(self, expression):
@@ -226,7 +311,15 @@ class Function(Node):
         return "(lambda x : " + self.expression.toString() + ")"
     
     def interpret(self, env):
-        return lambda x : self.expression.interpret_local_variables(env, x)   
+        return lambda x : self.expression.interpret_local_variables(env, x)
+
+    def grow( plist, new_plist, dict, size):
+        if(size>7):
+            for i in plist:
+                #if(not isinstance(i,Function) and not isinstance(i,Map) and not isinstance(i,Sum)and not isinstance(i,VarList)):
+                 if(isinstance(i,Times) or isinstance(i,Plus) or isinstance(i,Minus)or isinstance(i,Sum)):
+                    new_plist.append(Function(i))
+
 
 class Argmax(Node):
     def __init__(self, l):
@@ -238,7 +331,16 @@ class Argmax(Node):
         return 'argmax(' + self.list.toString() + ")"
     
     def interpret(self, env):
-        return np.argmax(self.list.interpret(env)) 
+        return np.argmax(self.list.interpret(env))
+
+    def grow(plist, new_plist, dict, size):
+        if (size > 7):
+            temp=[]
+            for i in new_plist:
+                if (isinstance(i, Map)):
+                    temp.append(i)
+            for i in temp:
+                    new_plist.append(Argmax(i))
 
 class Sum(Node):
     def __init__(self, l):
@@ -250,7 +352,21 @@ class Sum(Node):
         return 'sum(' + self.list.toString() + ")"
     
     def interpret(self, env):
-        return np.sum(self.list.interpret(env)) 
+        return np.sum(self.list.interpret(env))
+
+    def grow(plist, new_plist, dict, size):
+        temp = []
+        """
+        for i in range(1,size):
+            if(i in dict.keys()):
+                temp.extend(dict[i])
+        """
+        if (size > 7):
+            for i in plist:
+                if (isinstance(i, Map)):
+                    new_plist.append(Sum(i))
+
+
 
 class Map(Node):
     def __init__(self, function, l):
@@ -275,4 +391,38 @@ class Map(Node):
             list_var = env[self.local][self.listname]
             return list(map(self.function.interpret(env), list_var))
         
-        return list(map(self.function.interpret(env), self.list.interpret(env))) 
+        return list(map(self.function.interpret(env), self.list.interpret(env)))
+
+    def grow(plist, new_plist, dict, size):
+        if (size > 7):
+            temp1=[]
+            temp2=[]
+            for i in plist:
+                if(isinstance(i,Function)):
+                    temp1.append(i)
+                if(isinstance(i,VarList)):
+                    temp2.append(i)
+            for i in temp1:
+                    for j in temp2:
+                            new_plist.append(Map(i, j))
+
+
+
+
+        """
+        l1 = []
+        for i in dict.keys():
+            l1.append(i)
+        l2 = []
+        l2 = combinationSum(l1, size - 1)
+        for i in l2:
+            if (len(i) == 2):
+                p1 = dict[i[0]]
+                p2 = dict[i[1]]
+                for x in p1:
+                    if ( isinstance(x, Function)):
+                        for y in p2:
+                            if ( isinstance(y, VarList)):
+                                new_plist.append(Map(x, y))
+        """
+

@@ -41,9 +41,6 @@ class Board:
         has completed that row but they are still playing (i.e.: player has
         not chosen "n" action yet).
         """
-
-
-
         partial_completed_rows = [item[0] for item in rows]
         completed_rows = [column_won[0] for column_won in finished_columns]
         player_completed_rows = [column_won[1] for column_won in finished_columns]
