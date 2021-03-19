@@ -221,21 +221,14 @@ class Times(Node):
         return self.left.interpret(env) * self.right.interpret(env)
 
     def grow(plist, new_plist, dict, size):
-        if(size<7):
-            l1 = []
-            for i in dict.keys():
-                l1.append(i)
-            l2 = []
-            l2 = combinationSum(l1, size)
-            for i in l2:
-                if (len(i) == 2):
-                    p1 = dict[i[0]]
-                    p2 = dict[i[1]]
-                    for x in p1:
-                        if (not isinstance(x, VarList)and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
-                            for y in p2:
-                                if (not isinstance(y, VarList)and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
-                                    new_plist.append(Times(x, y))
+        temp=[]
+        if (size < 4):
+            for x in plist:
+                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                    temp.append(x)
+            for x in temp:
+                    for y in temp:
+                        new_plist.append(Times(x, y))
 
 
 
@@ -253,21 +246,14 @@ class Minus(Node):
         return self.left.interpret(env) - self.right.interpret(env)
 
     def grow(plist, new_plist, dict, size):
-        if (size < 7):
-            l1 = []
-            for i in dict.keys():
-                l1.append(i)
-            l2 = []
-            l2 = combinationSum(l1, size)
-            for i in l2:
-                if (len(i) == 2):
-                    p1 = dict[i[0]]
-                    p2 = dict[i[1]]
-                    for x in p1:
-                        if (not isinstance(x, VarList)and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
-                            for y in p2:
-                                if (not isinstance(y, VarList)and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
-                                    new_plist.append(Minus(x, y))
+        temp=[]
+        if (size < 4):
+            for x in plist:
+                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                    temp.append(x)
+            for x in temp:
+                    for y in temp:
+                        new_plist.append(Minus(x, y))
     
 
 class Plus(Node):
@@ -284,21 +270,14 @@ class Plus(Node):
         return self.left.interpret(env) + self.right.interpret(env)
 
     def grow(plist, new_plist, dict, size):
-        if (size < 7):
-            l1 = []
-            for i in dict.keys():
-                l1.append(i)
-            l2 = []
-            l2 = combinationSum(l1, size)
-            for i in l2:
-                if (len(i) == 2):
-                    p1 = dict[i[0]]
-                    p2 = dict[i[1]]
-                    for x in p1:
-                        if (not isinstance(x, VarList)and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
-                            for y in p2:
-                                if (not isinstance(y, VarList)and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
-                                    new_plist.append(Plus(x, y))
+        temp=[]
+        if (size < 4):
+            for x in plist:
+                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                    temp.append(x)
+            for x in temp:
+                    for y in temp:
+                        new_plist.append(Plus(x, y))
 
 
 class Function(Node):
@@ -314,7 +293,7 @@ class Function(Node):
         return lambda x : self.expression.interpret_local_variables(env, x)
 
     def grow( plist, new_plist, dict, size):
-        if(size>7):
+        if(size>4):
             for i in plist:
                 #if(not isinstance(i,Function) and not isinstance(i,Map) and not isinstance(i,Sum)and not isinstance(i,VarList)):
                  if(isinstance(i,Times) or isinstance(i,Plus) or isinstance(i,Minus)or isinstance(i,Sum)):
@@ -334,7 +313,7 @@ class Argmax(Node):
         return np.argmax(self.list.interpret(env))
 
     def grow(plist, new_plist, dict, size):
-        if (size > 7):
+        if (size > 4):
             temp=[]
             for i in new_plist:
                 if (isinstance(i, Map)):
@@ -361,7 +340,7 @@ class Sum(Node):
             if(i in dict.keys()):
                 temp.extend(dict[i])
         """
-        if (size > 7):
+        if (size > 4):
             for i in plist:
                 if (isinstance(i, Map)):
                     new_plist.append(Sum(i))
@@ -394,7 +373,7 @@ class Map(Node):
         return list(map(self.function.interpret(env), self.list.interpret(env)))
 
     def grow(plist, new_plist, dict, size):
-        if (size > 7):
+        if (size > 4):
             temp1=[]
             temp2=[]
             for i in plist:
