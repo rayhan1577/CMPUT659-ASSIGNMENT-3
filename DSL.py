@@ -381,6 +381,7 @@ class Map(Node):
                     temp1.append(i)
                 if(isinstance(i,VarList)):
                     temp2.append(i)
+            temp2.append(None)
             for i in temp1:
                     for j in temp2:
                             new_plist.append(Map(i, j))
