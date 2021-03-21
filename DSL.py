@@ -34,7 +34,7 @@ class Node:
         raise Exception('Unimplemented method: getRulesNames')
     
     @classmethod
-    def grow(plist, new_plist):
+    def grow(plist, new_plist, dict, size, marker):
         pass
     
     @classmethod
@@ -220,15 +220,25 @@ class Times(Node):
     def interpret(self, env):
         return self.left.interpret(env) * self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size):
-        temp=[]
-        if (size < 4):
-            for x in plist:
-                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
-                    temp.append(x)
-            for x in temp:
-                    for y in temp:
-                        new_plist.append(Times(x, y))
+    def grow(plist, new_plist, dict, size, marker):
+        if(size<5):
+            temp = []
+            l1 = []
+            for i in dict.keys():
+                l1.append(i)
+            l2 = []
+            l2 = combinationSum(l1, size )
+            for i in l2:
+                if (len(i) == 2):
+                        p1 = dict[i[0]]
+                        p2 = dict[i[1]]
+                        for x in p1:
+                            if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                                for y in p2:
+                                    if (not isinstance(y, VarList) and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
+                                        new_plist.append(Times(x, y))
+
+
 
 
 
@@ -245,15 +255,23 @@ class Minus(Node):
     def interpret(self, env):
         return self.left.interpret(env) - self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size):
-        temp=[]
-        if (size < 4):
-            for x in plist:
-                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
-                    temp.append(x)
-            for x in temp:
-                    for y in temp:
-                        new_plist.append(Minus(x, y))
+    def grow(plist, new_plist, dict, size, marker):
+        if (size < 5):
+            temp = []
+            l1 = []
+            for i in dict.keys():
+                l1.append(i)
+            l2 = []
+            l2 = combinationSum(l1, size )
+            for i in l2:
+                if (len(i) == 2):
+                        p1 = dict[i[0]]
+                        p2 = dict[i[1]]
+                        for x in p1:
+                            if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                                for y in p2:
+                                    if (not isinstance(y, VarList) and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function) and x!=y):
+                                        new_plist.append(Minus(x, y))
     
 
 class Plus(Node):
@@ -269,15 +287,26 @@ class Plus(Node):
     def interpret(self, env):
         return self.left.interpret(env) + self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size):
-        temp=[]
-        if (size < 4):
-            for x in plist:
-                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
-                    temp.append(x)
-            for x in temp:
-                    for y in temp:
-                        new_plist.append(Plus(x, y))
+    def grow(plist, new_plist, dict, size, marker):
+        if (size < 5):
+            temp=[]
+            l1 = []
+            for i in dict.keys():
+                l1.append(i)
+            l2 = []
+            l2 = combinationSum(l1, size )
+            #print(l2)
+            for i in l2:
+                if (len(i) == 2):
+                        p1 = dict[i[0]]
+                        p2 = dict[i[1]]
+                        for x in p1:
+                            if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
+                                for y in p2:
+                                    if (not isinstance(y, VarList) and not isinstance(y, Sum) and not isinstance(y, Map) and not isinstance(y, Function)):
+                                        new_plist.append(Plus(x, y))
+
+
 
 
 class Function(Node):
@@ -292,12 +321,13 @@ class Function(Node):
     def interpret(self, env):
         return lambda x : self.expression.interpret_local_variables(env, x)
 
-    def grow( plist, new_plist, dict, size):
-        if(size>4):
-            for i in plist:
-                #if(not isinstance(i,Function) and not isinstance(i,Map) and not isinstance(i,Sum)and not isinstance(i,VarList)):
-                 if(isinstance(i,Times) or isinstance(i,Plus) or isinstance(i,Minus)or isinstance(i,Sum)):
-                    new_plist.append(Function(i))
+    def grow( plist, new_plist, dict, size, marker):
+        temp=[]
+
+        for i in range(marker, len(plist)):
+            #if(not isinstance(i,Function) and not isinstance(i,Map) and not isinstance(i,Sum)and not isinstance(i,VarList)):
+             if(isinstance(plist[i],Times) or isinstance(plist[i],Plus) or isinstance(plist[i],Minus)or isinstance(plist[i],Sum)):
+                new_plist.append(Function(plist[i]))
 
 
 class Argmax(Node):
@@ -312,14 +342,11 @@ class Argmax(Node):
     def interpret(self, env):
         return np.argmax(self.list.interpret(env))
 
-    def grow(plist, new_plist, dict, size):
-        if (size > 4):
+    def grow(plist, new_plist, dict, size, marker):
             temp=[]
-            for i in new_plist:
-                if (isinstance(i, Map)):
-                    temp.append(i)
-            for i in temp:
-                    new_plist.append(Argmax(i))
+            for i in range(marker, len(plist)):
+                if (isinstance(plist[i], Map)):
+                    new_plist.append(Argmax(plist[i]))
 
 class Sum(Node):
     def __init__(self, l):
@@ -333,17 +360,10 @@ class Sum(Node):
     def interpret(self, env):
         return np.sum(self.list.interpret(env))
 
-    def grow(plist, new_plist, dict, size):
-        temp = []
-        """
-        for i in range(1,size):
-            if(i in dict.keys()):
-                temp.extend(dict[i])
-        """
-        if (size > 4):
-            for i in plist:
-                if (isinstance(i, Map)):
-                    new_plist.append(Sum(i))
+    def grow(plist, new_plist, dict, size, marker):
+            for i in range(marker, len(plist)):
+                if (isinstance(plist[i], Map)):
+                    new_plist.append(Sum(plist[i]))
 
 
 
@@ -372,13 +392,13 @@ class Map(Node):
         
         return list(map(self.function.interpret(env), self.list.interpret(env)))
 
-    def grow(plist, new_plist, dict, size):
-        if (size > 4):
+    def grow(plist, new_plist, dict, size, marker):
             temp1=[]
             temp2=[]
+            for i in range(marker, len(plist)):
+                if(isinstance(plist[i],Function)):
+                    temp1.append(plist[i])
             for i in plist:
-                if(isinstance(i,Function)):
-                    temp1.append(i)
                 if(isinstance(i,VarList)):
                     temp2.append(i)
             temp2.append(None)
@@ -386,23 +406,4 @@ class Map(Node):
                     for j in temp2:
                             new_plist.append(Map(i, j))
 
-
-
-
-        """
-        l1 = []
-        for i in dict.keys():
-            l1.append(i)
-        l2 = []
-        l2 = combinationSum(l1, size - 1)
-        for i in l2:
-            if (len(i) == 2):
-                p1 = dict[i[0]]
-                p2 = dict[i[1]]
-                for x in p1:
-                    if ( isinstance(x, Function)):
-                        for y in p2:
-                            if ( isinstance(y, VarList)):
-                                new_plist.append(Map(x, y))
-        """
 

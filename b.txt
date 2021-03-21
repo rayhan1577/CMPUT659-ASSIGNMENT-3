@@ -1,0 +1,2 @@
+argmax(map((lambda x : sum(map((lambda x : (NumberAdvancedThisRound + NumberAdvancedThisRound)), None))), actions))
+argmax(map((lambda x : sum(map((lambda x : (NumberAdvancedThisRound + move_value)), None))), actions))

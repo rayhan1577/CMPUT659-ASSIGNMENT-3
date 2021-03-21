@@ -1,0 +1,14 @@
+argmax(map((lambda x : sum(map((lambda x : ((NumberAdvancedByAction * move_value) - (marker * IsNewNeutral))), None))), actions))
+
+
+br, num = bus.synthesize(10,
+[Sum, Map, Argmax, Function, Plus, Times, Minus],
+[’neutrals’, ’actions’],
+[’progress_value’, ’move_value’],
+[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral],
+eval,
+programs_not_to_eval)
+
+
+
+program_decide_column = Argmax(Map(Function(Sum(Map(Function(Minus(Times(NumberAdvancedByAction(), VarScalarFromArray('move_value')), Times(VarScalar('marker'), IsNewNeutral()))), None))), VarList('actions')))
