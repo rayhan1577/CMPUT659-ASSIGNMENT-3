@@ -114,7 +114,7 @@ class bus:
         plist=[]
         for i in functions:
             plist.append(i())
-        plist.append(VarScalar('marker'))
+        #plist.append(VarScalar('marker'))
         for i in values:
             plist.append(VarScalarFromArray(i))
         for i in state:
@@ -129,6 +129,7 @@ class bus:
             print(i, file=self.f)
             print(len(plist))
             self.grow(plist,operation,i+2)
+            """
             if(self.current_best_strategy==None):
                 for j in range(self.apporach, len(plist)):
                     self.apporach+=1
@@ -179,7 +180,7 @@ class bus:
                                 return self.current_best_strategy
                     except:
                         pass
-
+            """
 
 if __name__ == "__main__":    
     start = time.time()

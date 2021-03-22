@@ -1,0 +1,16 @@
+ argmax(map((lambda x : NumberAdvancedByAction), actions))
+ argmax(map((lambda x : (NumberAdvancedByAction + (NumberAdvancedByAction + NumberAdvancedByAction))), actions))
+ argmax(map((lambda x : ((NumberAdvancedByAction * (NumberAdvancedByAction * NumberAdvancedByAction)) - NumberAdvancedByAction)), actions))
+ 2317.107866048813  seconds
+Generated Program:  693670
+Evaluated program:  260124
+
+
+
+
+
+
+argmax(map((lambda x : NumberAdvancedByAction), actions))
+argmax(map((lambda x : (NumberAdvancedByAction + NumberAdvancedByAction)), actions))
+argmax(map((lambda x : sum(map((lambda x : (NumberAdvancedThisRound + move_value)), None))), actions))
+argmax(map((lambda x : sum(map((lambda x : (NumberAdvancedThisRound + NumberAdvancedByAction)), None))), actions))

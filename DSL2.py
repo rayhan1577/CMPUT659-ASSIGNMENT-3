@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 
+
 class Node:
     def __init__(self):
         self.size = 0
@@ -9,98 +10,103 @@ class Node:
         self.listname = 'list'
         self.tuplename = 'tuple'
         self.statename = 'state'
-    
+
     def getSize(self):
         return self.size
-    
+
     def toString(self):
         raise Exception('Unimplemented method: toString')
-    
+
     def interpret(self):
         raise Exception('Unimplemented method: interpret')
-    
-    def interpret_local_variables(self, env, x):        
+
+    def interpret_local_variables(self, env, x):
         if self.local not in env:
             env[self.local] = {}
-        
+
         if type(x).__name__ == self.tuplename:
             x = list(x)
-        
+
         env[self.local][type(x).__name__] = x
-                
-        return self.interpret(env) 
-    
+
+        return self.interpret(env)
+
     def getRulesNames(self, rules):
         raise Exception('Unimplemented method: getRulesNames')
-    
+
     @classmethod
     def grow(plist, new_plist, dict, size, marker):
         pass
-    
+
     @classmethod
     def className(cls):
         return cls.__name__
+
 
 class VarList(Node):
     def __init__(self, name):
         self.name = name
         self.size = 1
-        
+
     def toString(self):
         return self.name
-    
+
     def interpret(self, env):
         return env[self.name]
-    
+
+
 class VarScalarFromArray(Node):
     def __init__(self, name):
         super(VarScalarFromArray, self).__init__()
         self.name = name
         self.size = 1
-        
+
     def toString(self):
         return self.name
-    
+
     def interpret(self, env):
         return env[self.name][env[self.local][self.intname]]
-    
+
+
 class VarScalar(Node):
     def __init__(self, name):
         self.name = name
         self.size = 1
-        
+
     def toString(self):
         return self.name
-    
+
     def interpret(self, env):
         return env[self.name]
-    
+
+
 class Constant(Node):
     def __init__(self, value):
         self.value = value
         self.size = 1
-        
+
     def toString(self):
         return str(self.value)
-    
+
     def interpret(self, env):
         return self.value
+
 
 class NumberAdvancedByAction(Node):
     def __init__(self):
         super(NumberAdvancedByAction, self).__init__()
         self.size = 1
-        
+
     def toString(self):
         return type(self).__name__
-    
+
     def interpret(self, env):
         """
         Return the number of positions advanced in this round for a given
         column by the player.
         """
         action = env[self.local][self.listname]
-        
+
         # Special case: doubled action (e.g. (6,6))
         if len(action) == 2 and action[0] == action[1]:
             return 2
@@ -108,14 +114,15 @@ class NumberAdvancedByAction(Node):
         else:
             return 1
 
+
 class IsNewNeutral(Node):
     def __init__(self):
         super(IsNewNeutral, self).__init__()
         self.size = 1
-        
+
     def toString(self):
         return type(self).__name__
-    
+
     def interpret(self, env):
         """
         Return the number of positions advanced in this round for a given
@@ -123,7 +130,7 @@ class IsNewNeutral(Node):
         """
         state = env[self.statename]
         column = env[self.local][self.intname]
-        
+
         # Return a boolean representing if action will place a new neutral. """
         is_new_neutral = True
         for neutral in state.neutral_positions:
@@ -137,10 +144,10 @@ class NumberAdvancedThisRound(Node):
     def __init__(self):
         super(NumberAdvancedThisRound, self).__init__()
         self.size = 1
-        
+
     def toString(self):
         return type(self).__name__
-    
+
     def interpret(self, env):
         """
         Return the number of positions advanced in this round for a given
@@ -148,7 +155,7 @@ class NumberAdvancedThisRound(Node):
         """
         state = env[self.statename]
         column = env[self.local][self.intname]
-        
+
         counter = 0
         previously_conquered = -1
         neutral_position = -1
@@ -176,8 +183,8 @@ class NumberAdvancedThisRound(Node):
         return counter
 
 
-#this code to find the combination of the numbers upto the max_cost  has been taken from GeekforGeeks
-#link: https://www.geeksforgeeks.org/combinational-sum/
+# this code to find the combination of the numbers upto the max_cost  has been taken from GeekforGeeks
+# link: https://www.geeksforgeeks.org/combinational-sum/
 def combinationSum(candidates, target):
     result = []
     unique = {}
@@ -204,36 +211,30 @@ def solve(candidates, target, result, unique, i=0, current=[]):
         current.pop(len(current) - 1)
 
 
-
-
-
 class Times(Node):
     def __init__(self, left, right):
         super(Times, self).__init__()
         self.left = left
         self.right = right
         self.size = self.left.size + self.right.size + 1
-        
+
     def toString(self):
         return "(" + self.left.toString() + " * " + self.right.toString() + ")"
-    
+
     def interpret(self, env):
         return self.left.interpret(env) * self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist, dict, size):
         temp = []
-        if (size <= 7):
+        if (size < 4):
             for x in plist:
-                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x,Function) and not isinstance(x, Argmax)):
+                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(
+                        x, Function)):
                     temp.append(x)
             for x in temp:
                 for y in temp:
-                    if (x.size + y.size == size - 1):
+                    if (x != y):
                         new_plist.append(Times(x, y))
-
-
-
-
 
 class Minus(Node):
     def __init__(self, left, right):
@@ -241,24 +242,25 @@ class Minus(Node):
         self.left = left
         self.right = right
         self.size = self.left.size + self.right.size + 1
-        
+
     def toString(self):
         return "(" + self.left.toString() + " - " + self.right.toString() + ")"
-    
+
     def interpret(self, env):
         return self.left.interpret(env) - self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist, dict, size):
         temp = []
-        if (size <= 7):
+        if (size < 4):
             for x in plist:
-                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x,Function) and not isinstance(x, Argmax)):
+                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(
+                        x, Function)):
                     temp.append(x)
             for x in temp:
                 for y in temp:
-                    if (x.size + y.size == size - 1):
+                    if (x != y):
                         new_plist.append(Minus(x, y))
-    
+
 
 class Plus(Node):
     def __init__(self, left, right):
@@ -266,25 +268,23 @@ class Plus(Node):
         self.left = left
         self.right = right
         self.size = self.left.size + self.right.size + 1
-        
+
     def toString(self):
         return "(" + self.left.toString() + " + " + self.right.toString() + ")"
-    
+
     def interpret(self, env):
         return self.left.interpret(env) + self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist, dict, size):
         temp=[]
-        if(size<=7):
+        if (size < 4):
             for x in plist:
-                if(not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x,Function) and not isinstance(x, Argmax)):
+                if (not isinstance(x, VarList) and not isinstance(x, Sum) and not isinstance(x, Map) and not isinstance(x, Function)):
                     temp.append(x)
             for x in temp:
                     for y in temp:
-                        if ( x.size + y.size==size-1):
+                        if(x!=y):
                             new_plist.append(Plus(x, y))
-
-
 
 
 class Function(Node):
@@ -292,19 +292,19 @@ class Function(Node):
         super(Function, self).__init__()
         self.expression = expression
         self.size = self.expression.size + 1
-        
+
     def toString(self):
         return "(lambda x : " + self.expression.toString() + ")"
-    
-    def interpret(self, env):
-        return lambda x : self.expression.interpret_local_variables(env, x)
 
-    def grow( plist, new_plist, dict, size, marker):
-        temp=[]
-        for i in range(marker, len(plist)):
-            if( not isinstance(plist[i], Sum) and not isinstance(plist[i], Argmax) and not isinstance(plist[i],Function)and not isinstance(plist[i],Map)):
-            #if((isinstance(plist[i],Times) or isinstance(plist[i],Plus) or isinstance(plist[i],Minus)or isinstance(plist[i],Sum) or isinstance(plist[i],VarScalarFromArray) or isinstance(plist[i],IsNewNeutral)or isinstance(plist[i],NumberAdvancedByAction)or isinstance(plist[i],NumberAdvancedThisRound)) and plist[i].size-1==size):
-                new_plist.append(Function(plist[i]))
+    def interpret(self, env):
+        return lambda x: self.expression.interpret_local_variables(env, x)
+
+    def grow( plist, new_plist, dict, size):
+        if(size>4):
+            for i in plist:
+                #if(not isinstance(i,Function) and not isinstance(i,Map) and not isinstance(i,Sum)and not isinstance(i,VarList)):
+                 if(isinstance(i,Times) or isinstance(i,Plus) or isinstance(i,Minus)or isinstance(i,Sum)):
+                    new_plist.append(Function(i))
 
 
 class Argmax(Node):
@@ -312,35 +312,46 @@ class Argmax(Node):
         super(Argmax, self).__init__()
         self.list = l
         self.size = self.list.size + 1
-        
+
     def toString(self):
         return 'argmax(' + self.list.toString() + ")"
-    
+
     def interpret(self, env):
         return np.argmax(self.list.interpret(env))
 
-    def grow(plist, new_plist, dict, size, marker):
-            for i in range(marker, len(plist)):
-                if ((isinstance(plist[i], Map) or isinstance(plist[i],VarList)) ):
-                    new_plist.append(Argmax(plist[i]))
+    def grow(plist, new_plist, dict, size):
+        if (size > 4):
+            temp=[]
+            for i in new_plist:
+                if (isinstance(i, Map)):
+                    temp.append(i)
+            for i in temp:
+                    new_plist.append(Argmax(i))
+
 
 class Sum(Node):
     def __init__(self, l):
         super(Sum, self).__init__()
         self.list = l
         self.size = self.list.size + 1
-        
+
     def toString(self):
         return 'sum(' + self.list.toString() + ")"
-    
+
     def interpret(self, env):
         return np.sum(self.list.interpret(env))
 
-    def grow(plist, new_plist, dict, size, marker):
-            for i in range(marker, len(plist)):
-                if (isinstance(plist[i], Map)and plist[i].size-1==size):
-                    new_plist.append(Sum(plist[i]))
-
+    def grow(plist, new_plist, dict, size):
+        temp = []
+        """
+        for i in range(1,size):
+            if(i in dict.keys()):
+                temp.extend(dict[i])
+        """
+        if (size > 4):
+            for i in plist:
+                if (isinstance(i, Map)):
+                    new_plist.append(Sum(i))
 
 
 class Map(Node):
@@ -348,34 +359,36 @@ class Map(Node):
         super(Map, self).__init__()
         self.function = function
         self.list = l
-        
+
         if self.list is None:
             self.size = self.function.size + 1
         else:
             self.size = self.list.size + self.function.size + 1
-        
+
     def toString(self):
         if self.list is None:
             return 'map(' + self.function.toString() + ", None)"
-        
+
         return 'map(' + self.function.toString() + ", " + self.list.toString() + ")"
-    
+
     def interpret(self, env):
         # if list is None, then it tries to retrieve a list from the local variables of lambda functions
         if self.list is None:
             list_var = env[self.local][self.listname]
             return list(map(self.function.interpret(env), list_var))
-        
+
         return list(map(self.function.interpret(env), self.list.interpret(env)))
 
-    def grow(plist, new_plist, dict, size, marker):
-            temp1=[]
-            temp2=[]
-            for i in range(marker, len(plist)):
-                if(isinstance(plist[i],Function)):
-                    new_plist.append(Map(plist[i], VarList("neutrals")))
-                    new_plist.append(Map(plist[i], VarList("actions")))
-                    new_plist.append(Map(plist[i], None))
-
-
-
+    def grow(plist, new_plist, dict, size):
+        if (size > 4):
+            temp1 = []
+            temp2 = []
+            for i in plist:
+                if (isinstance(i, Function)):
+                    temp1.append(i)
+                if (isinstance(i, VarList)):
+                    temp2.append(i)
+            temp2.append(None)
+            for i in temp1:
+                for j in temp2:
+                    new_plist.append(Map(i, j))

@@ -82,7 +82,7 @@ def calculate_size(p):
 class bus:
     def __init__(self):
         self.f = open("a.txt", "w")
-        self.f2=open("b.txt","w")
+        self.f2 = open("b.txt", "w")
         self.dict = {}
         self.evaluated = 0
         self.generated = 0
@@ -91,35 +91,45 @@ class bus:
         self.apporach = 0
         self.current_best_strategy = None
         self.IBR = 0
-        self.flag=0
-        self.marker1=5
-        self.marker2=5
-        self.prog_generated=5
-        self.prog_eval=0
+        self.flag = 0
+        self.marker1 = 8
+        self.marker2 = 8
+        self.prog_generated = 8
+        self.prog_eval = 0
 
     def grow(self, plist, operation, size):
         new_plist = []
-        self.flag=0
-        temp=[]
+        self.flag = 0
+        temp = []
         for op in operation:
-            op.grow(plist, new_plist, self.dict, size, self.marker2-self.marker1)
-        #print("ARgmax: ",c)
-        #print("newplist: ", len(new_plist))
+            op.grow(plist, new_plist, self.dict, size, self.marker2 - self.marker1)
+        # print("ARgmax: ",c)
+        # print("newplist: ", len(new_plist))
         for i in new_plist:
             if (i.toString() not in self.out):
                 self.out.add(i.toString())
-                self.prog_generated+=1
-                if(isinstance(i,Argmax)):
+                self.prog_generated += 1
+                if (isinstance(i, Argmax)):
                     temp.append(i)
                 print(i.toString(), file=self.f)
+                if (size < 6):
+                    x = calculate_size(i)
+                    if (x in self.dict.keys()):
+                        self.dict[x].append(i)
+                    else:
+                        self.dict[x] = []
+                        self.dict[x].append(i)
+                """
+
+                """
                 plist.append(i)
-        temp.reverse()
+        # temp.reverse()
         for i in temp:
             if (self.current_best_strategy == None and isinstance(i, Argmax)):
                 self.prog_eval += 1
                 program_yes_no = Sum(Map(Function(
                     Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),
-                                         VarList('neutrals')))
+                    VarList('neutrals')))
                 program_decide_column = i
                 p1 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
                 p2 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
@@ -127,18 +137,23 @@ class bus:
                 victories2 = 0
                 try:
                     victories1, victories2 = play_n_matches(p1, p2, 50)
+                    print("strategy: ", i.toString())
                     print(victories1, victories2)
                     print('Player 1: ', victories1 / (victories1 + victories2))
                     print('Player 2: ', victories2 / (victories1 + victories2))
-                    print("strategy: ", i.toString())
-                    print("strategy: ", i.toString(), file=self.f2)
-                    self.current_best_strategy = i
+                    if ((victories1 / (victories1 + victories2)) <= .40 or (
+                            victories1 / (victories1 + victories2)) >= .60):
+                        print("strategy: ", i.toString())
+                        self.IBR += 1
+                        self.current_best_strategy = i
                 except:
                     pass
 
-            if (isinstance(i, Argmax)  and self.current_best_strategy != None):
-                self.prog_eval+=1
-                program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),VarList('neutrals')))
+            if (isinstance(i, Argmax)  and self.current_best_strategy != None and self.flag <2000):
+                self.prog_eval += 1
+                program_yes_no = Sum(Map(Function(
+                    Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),
+                    VarList('neutrals')))
                 p1 = Rule_of_28_Player_PS(program_yes_no, self.current_best_strategy)
                 p2 = Rule_of_28_Player_PS(program_yes_no, i)
                 try:
@@ -158,14 +173,14 @@ class bus:
                     print(victories1, victories2)
                     print('Player 1: ', victories1 / (victories1 + victories2))
                     print('Player 2: ', victories2 / (victories1 + victories2))
-                    print("strategy: " ,i.toString())
+                    print("strategy: ", i.toString())
                     print("IBR", self.IBR)
                     if (victories2 / (victories1 + victories2)  >= .55):
                         self.IBR += 1
                         print("New strategy found!!!!!!!!!!!!!!!!")
                         print(i.toString(), file=self.f2)
                         self.current_best_strategy = i
-                        if (self.IBR == 6):
+                        if (self.IBR == 5):
                             return self.current_best_strategy
                 except:
                     pass
@@ -174,31 +189,32 @@ class bus:
         plist = []
         for i in functions:
             plist.append(i())
-        for i in plist:
-            print(i.size)
-        #plist.append(VarScalar('marker'))
+        # plist.append(VarScalar('marker'))
         for i in values:
             plist.append(VarScalarFromArray(i))
         for i in state:
             plist.append(VarList(i))
 
+        self.dict[1] = []
+        for i in plist:
+            self.dict[1].append(i)
         for i in range(n):
             print(i)
             print(i, file=self.f)
             print(len(plist))
-            self.grow(plist, operation, i + 1)
-            self.maker1=self.marker2
-            self.maker2=len(plist)
-            if(self.IBR==5):
+            self.grow(plist, operation, i + 2)
+            self.maker1 = self.marker2
+            self.maker2 = len(plist)
+            if (self.IBR == 5):
                 return
-
-
 
 
 if __name__ == "__main__":
     start = time.time()
     b = bus()
-    my_prog = b.synthesize(10, [Sum, Map, Argmax, Function, Plus, Times, Minus], ['neutrals', 'actions'],['progress_value', 'move_value'],[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral], 5, 10)
+    my_prog = b.synthesize(10, [Sum, Map, Argmax, Function, Plus, Times, Minus], ['neutrals', 'actions'],
+                           ['progress_value', 'move_value'],
+                           [NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral], 5, 10)
     print("Best strategy:", b.current_best_strategy.toString())
 
     program_yes_no = Sum(
@@ -220,6 +236,6 @@ if __name__ == "__main__":
     print(victories1, victories2)
     print('Player 1: ', victories1 / (victories1 + victories2))
     print('Player 2: ', victories2 / (victories1 + victories2))
-    print("Generated Program: ",b.prog_generated)
-    print("Evaluated program: ",b.prog_eval)
+    print("Generated Program: ", b.prog_generated)
+    print("Evaluated program: ", b.prog_eval)
     print(end - start, ' seconds')
