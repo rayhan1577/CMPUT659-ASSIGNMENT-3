@@ -4,7 +4,7 @@ from game import Game
 from random_player import RandomPlayer
 from rule_of_28_sketch import Rule_of_28_Player_PS
 from DSL2 import *
-
+###
 
 def play_match(p1, p2):
     game = Game(n_players=2, dice_number=4, dice_value=6, column_range=[2, 12],
