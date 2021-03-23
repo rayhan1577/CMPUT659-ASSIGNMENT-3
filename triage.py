@@ -6,6 +6,7 @@ from rule_of_28_sketch import Rule_of_28_Player_PS
 from DSL import *
 
 
+
 def play_match(p1, p2):
     game = Game(n_players=2, dice_number=4, dice_value=6, column_range=[2, 12],
                 offset=2, initial_height=3)
@@ -71,12 +72,6 @@ def play_n_matches(p1, p2, n):
     return p1_victories, p2_victories
 
 
-def calculate_size(p):
-    x = p.toString()
-    y = x.count('NumberAdvancedThisRound') + x.count('NumberAdvancedByAction') + x.count('IsNewNeutral') + x.count(
-        'marker') + x.count('progress_value') + x.count('move_value') + x.count('neutrals') + x.count(
-        'actions') + x.count('lambda') + x.count('map') + x.count('sum') + x.count('argmax')
-    return y
 
 
 class bus:
@@ -92,8 +87,8 @@ class bus:
         self.current_best_strategy = None
         self.IBR = 0
         self.flag=0
-        self.marker1=5
-        self.marker2=5
+        self.marker1=0
+        self.marker2=7
         self.prog_generated=5
         self.prog_eval=0
 
@@ -102,18 +97,17 @@ class bus:
         self.flag=0
         temp=[]
         for op in operation:
-            op.grow(plist, new_plist, self.dict, size, self.marker2-self.marker1)
+            op.grow(plist, new_plist, self.dict, size,self.marker1)
         #print("ARgmax: ",c)
         #print("newplist: ", len(new_plist))
         for i in new_plist:
+            self.prog_generated += 1
             if (i.toString() not in self.out):
                 self.out.add(i.toString())
-                self.prog_generated+=1
                 if(isinstance(i,Argmax)):
                     temp.append(i)
                 print(i.toString(), file=self.f)
                 plist.append(i)
-        temp.reverse()
         for i in temp:
             if (self.current_best_strategy == None and isinstance(i, Argmax)):
                 self.prog_eval += 1
@@ -130,13 +124,13 @@ class bus:
                     print(victories1, victories2)
                     print('Player 1: ', victories1 / (victories1 + victories2))
                     print('Player 2: ', victories2 / (victories1 + victories2))
-                    print("strategy: ", i.toString())
+                    print("First strategy: ", i.toString())
                     print("strategy: ", i.toString(), file=self.f2)
                     self.current_best_strategy = i
                 except:
                     pass
 
-            if (isinstance(i, Argmax)  and self.current_best_strategy != None):
+            elif (isinstance(i, Argmax)  and self.current_best_strategy != None and i.size<=10):
                 self.prog_eval+=1
                 program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),VarList('neutrals')))
                 p1 = Rule_of_28_Player_PS(program_yes_no, self.current_best_strategy)
@@ -160,7 +154,7 @@ class bus:
                     print('Player 2: ', victories2 / (victories1 + victories2))
                     print("strategy: " ,i.toString())
                     print("IBR", self.IBR)
-                    if (victories2 / (victories1 + victories2)  >= .55):
+                    if (victories2 / (victories1 + victories2)  >= .5 and (victories1 + victories2)>500):
                         self.IBR += 1
                         print("New strategy found!!!!!!!!!!!!!!!!")
                         print(i.toString(), file=self.f2)
@@ -174,8 +168,6 @@ class bus:
         plist = []
         for i in functions:
             plist.append(i())
-        for i in plist:
-            print(i.size)
         #plist.append(VarScalar('marker'))
         for i in values:
             plist.append(VarScalarFromArray(i))
@@ -186,7 +178,7 @@ class bus:
             print(i)
             print(i, file=self.f)
             print(len(plist))
-            self.grow(plist, operation, i + 1)
+            self.grow(plist, operation, i )
             self.maker1=self.marker2
             self.maker2=len(plist)
             if(self.IBR==5):
@@ -198,7 +190,7 @@ class bus:
 if __name__ == "__main__":
     start = time.time()
     b = bus()
-    my_prog = b.synthesize(10, [Sum, Map, Argmax, Function, Plus, Times, Minus], ['neutrals', 'actions'],['progress_value', 'move_value'],[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral], 5, 10)
+    my_prog = b.synthesize(10, [Sum, Map, Argmax, Function,  Times], ['neutrals', 'actions'],['progress_value', 'move_value'],[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral], 5, 10)
     print("Best strategy:", b.current_best_strategy.toString())
 
     program_yes_no = Sum(
