@@ -1,112 +1,18 @@
-
-
-First strategy:  argmax(map((lambda x : NumberAdvancedByAction), actions))
-
-409 477
-Player 1:  0.4616252821670429
-Player 2:  0.5383747178329571
-strategy:  argmax(map((lambda x : sum(map((lambda x : NumberAdvancedThisRound), None))), actions))
-IBR 0
-New strategy found!!!!!!!!!!!!!!!!
-
-
-
-
- 
-442 493
-Player 1:  0.4727272727272727
-Player 2:  0.5272727272727272
-strategy:  argmax(map((lambda x : sum(map((lambda x : NumberAdvancedByAction), None))), actions))
-IBR 1
-New strategy found!!!!!!!!!!!!!!!!
- 
- 
- 
- 
-361 598
-Player 1:  0.37643378519290926
-Player 2:  0.6235662148070907
-strategy:  argmax(map((lambda x : sum(map((lambda x : move_value), None))), actions))
-IBR 2
-New strategy found!!!!!!!!!!!!!!!!
-
-
-
-
-474 490
-Player 1:  0.491701244813278
-Player 2:  0.508298755186722
-strategy:  argmax(map((lambda x : sum(map((lambda x : (NumberAdvancedByAction + move_value)), None))), actions))
-IBR 3
-New strategy found!!!!!!!!!!!!!!!!
- 
- 
- 
-474 502
-Player 1:  0.48565573770491804
-Player 2:  0.514344262295082
-strategy:  argmax(map((lambda x : sum(map((lambda x : (move_value * NumberAdvancedByAction)), None))), actions))
-IBR 4
-New strategy found!!!!!!!!!!!!!!!!
- 
- 
- 
-448 521
-Player 1:  0.46233230134158926
-Player 2:  0.5376676986584107
-strategy:  argmax(map((lambda x : sum(map((lambda x : (move_value - IsNewNeutral)), None))), actions))
-IBR 5
-New strategy found!!!!!!!!!!!!!!!!
-
-
-
-464 505
-Player 1:  0.478844169246646
-Player 2:  0.5211558307533539
-strategy:  argmax(map((lambda x : sum(map((lambda x : (move_value * progress_value)), None))), actions))
-IBR 6
-New strategy found!!!!!!!!!!!!!!!!
-
-
-
-454 493
-Player 1:  0.47940865892291445
-Player 2:  0.5205913410770855
-strategy:  argmax(map((lambda x : sum(map((lambda x : (move_value - progress_value)), None))), actions))
-IBR 7
-New strategy found!!!!!!!!!!!!!!!!
-
-
-
+Best strategy: argmax(map((lambda x : sum(map((lambda x : (progress_value * move_value)), None))), actions))
 with Random player
-My program:    0.9406150583244963
-Random player 0.05938494167550371
+My program:    0.9494949494949495
+Random player 0.050505050505050504
 ##################################
 
 
 with given program
-My program:   0.48663101604278075
-Given Program: 0.5133689839572193
+My program:   0.48568507157464214
+Given Program: 0.5143149284253579
 ##################################
 Generated Program:  588629
-Evaluated program:  85059
-3286.963065624237  seconds
+Evaluated program:  6941
+TRIAGE: 926.0587382316589  seconds
 
-Process finished with exit code 0
+WITHOUT TRIAGE: 3037.3240160942078  seconds
 
-
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
