@@ -3,7 +3,8 @@ import time
 from game import Game
 from random_player import RandomPlayer
 from rule_of_28_sketch import Rule_of_28_Player_PS
-from DSL2 import *
+from DSL import *
+
 
 
 def play_match(p1, p2):
@@ -76,65 +77,64 @@ def play_n_matches(p1, p2, n):
 class bus:
     def __init__(self):
         self.f = open("a.txt", "w")
-        self.dict = {}
         self.out = set()
-        self.mark = 0
-        self.apporach = 0
         self.current_best_strategy = None
         self.IBR = 0
-        self.gen_program=7
+        self.prog_generated=5
         self.prog_eval=0
+        self.my_program =None
 
     def grow(self, plist, operation, size):
         new_plist = []
-        flag=0
+        temp=[]
         for op in operation:
-            op.grow(plist, new_plist, self.dict, size)
+            op.grow(plist, new_plist,size,)
         for i in new_plist:
+
             if (i.toString() not in self.out):
                 self.out.add(i.toString())
+                self.prog_generated += 1
+                if(isinstance(i,Argmax)):
+                    temp.append(i)
                 print(i.toString(), file=self.f)
-                self.gen_program+=1
-                if (self.current_best_strategy == None and isinstance(i, Argmax)):
-                    self.prog_eval+=1
-                    program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)),VarScalarFromArray('progress_value'))),VarList('neutrals')))
-                    program_decide_column = i
-                    p1 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
-                    p2 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
+                plist.append(i)
+        for i in temp:
+            self.prog_eval += 1
+            if (self.current_best_strategy == None):
+                program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),VarList('neutrals')))
+                program_decide_column = i
+                p1 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
+                p2 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
+                victories1 = 0
+                victories2 = 0
+                try:
+                    victories1, victories2 = play_n_matches(p1, p2, 50)
+                    print(victories1, victories2)
+                    print('Player 1: ', victories1 / (victories1 + victories2))
+                    print('Player 2: ', victories2 / (victories1 + victories2))
+                    print("First strategy: ", i.toString())
+                    self.current_best_strategy = i
+
+                except:
+                    pass
+
+            else:
+                program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),VarList('neutrals')))
+                p1 = Rule_of_28_Player_PS(program_yes_no, self.current_best_strategy)
+                p2 = Rule_of_28_Player_PS(program_yes_no, i)
+                try:
                     victories1 = 0
                     victories2 = 0
-                    try:
-                        victories1, victories2 = play_n_matches(p1, p2, 50)
-                        print(victories1, victories2)
-                        print('Player 1: ', victories1 / (victories1 + victories2))
-                        print('Player 2: ', victories2 / (victories1 + victories2))
-                        print("first strategy: ",i.toString())
-                        self.current_best_strategy =i
-                    except:
-                        pass
-                elif(isinstance(i, Argmax)  and i.size<=10):
-                    self.prog_eval += 1
-                    program_yes_no = Sum(Map(Function(Times(Plus(NumberAdvancedThisRound(), Constant(1)), VarScalarFromArray('progress_value'))),VarList('neutrals')))
-                    p1 = Rule_of_28_Player_PS(program_yes_no, self.current_best_strategy)
-                    p2 = Rule_of_28_Player_PS(program_yes_no, i)
-                    try:
-                        victories1 = 0
-                        victories2 = 0
-                        victories1, victories2 = play_n_matches(p1, p2, 500)
-                        print(victories1, victories2)
-                        print(i.toString())
-                        print('Player 1: ', victories1 / (victories1 + victories2))
-                        print('Player 2: ', victories2 / (victories1 + victories2))
-                        print("IBR", self.IBR)
-                        if ((victories2 / (victories1 + victories2)) >= .55):
-                            self.IBR += 1
-                            print("New strategy found!!!!!!!!!!!!!!!!")
-                            self.current_best_strategy = i
-                            if (self.IBR == 5):
-                                return self.current_best_strategy
-                    except:
-                        pass
-                plist.append(i)
+                    victories1, victories2 = play_n_matches(p1, p2, 500)
+
+                    if (victories2 / (victories1 + victories2)>= .5 and (victories1 + victories2)>500):
+                        self.current_best_strategy = i
+                        self.IBR += 1
+                        print("New strategy found!!!!!!!!!!!!!!!!")
+                        if (self.IBR == 5):
+                            return
+                except:
+                    pass
 
     def synthesize(self, n, operation, state, values, functions, eval, programs_not_to_eval):
         plist = []
@@ -145,22 +145,22 @@ class bus:
             plist.append(VarScalarFromArray(i))
         for i in state:
             plist.append(VarList(i))
-        self.dict[1] = []
-        for i in plist:
-            self.dict[1].append(i)
+
         for i in range(n):
-            print(i)
-            print(i, file=self.f)
-            print(len(plist))
-            self.grow(plist, operation, i + 2)
+            self.grow(plist, operation, i+1 )
+            #print(i+1)
+            print(i+1, file=self.f)
+            #print(len(plist))
             if(self.IBR==5):
                 return
+
+
 
 
 if __name__ == "__main__":
     start = time.time()
     b = bus()
-    my_prog = b.synthesize(10, [Sum, Map, Argmax, Function, Plus, Times, Minus], ['neutrals', 'actions'],['progress_value', 'move_value'],[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral], 5, 10)
+    b.synthesize(10, [Sum, Map, Argmax, Function,  Times], ['neutrals', 'actions'],['progress_value', 'move_value'],[NumberAdvancedThisRound, NumberAdvancedByAction, IsNewNeutral], 5, 10)
     print("Best strategy:", b.current_best_strategy.toString())
 
     program_yes_no = Sum(
@@ -169,19 +169,35 @@ if __name__ == "__main__":
     program_decide_column = Argmax(Map(Function(Sum(Map(Function(
         Minus(Times(NumberAdvancedByAction(), VarScalarFromArray('move_value')),
               Times(VarScalar('marker'), IsNewNeutral()))), None))), VarList('actions')))
-    print(program_decide_column.toString())
+    #print(program_decide_column.toString())
     # p1 = RandomPlayer()
+    p1 = Rule_of_28_Player_PS(program_yes_no, b.current_best_strategy)
+    p2 = RandomPlayer()
+    victories1 = 0
+    victories2 = 0
+    victories1, victories2 = play_n_matches(p1, p2, 500)
+    print(victories1, victories2)
+    print("with Random player")
+    print('My program:   ', victories1 / (victories1 + victories2))
+    print('Random player', victories2 / (victories1 + victories2))
+
+    print("##################################")
+
     p1 = Rule_of_28_Player_PS(program_yes_no, b.current_best_strategy)
     p2 = Rule_of_28_Player_PS(program_yes_no, program_decide_column)
     victories1 = 0
     victories2 = 0
-
     victories1, victories2 = play_n_matches(p1, p2, 500)
-
-    end = time.time()
     print(victories1, victories2)
-    print('Player 1: ', victories1 / (victories1 + victories2))
-    print('Player 2: ', victories2 / (victories1 + victories2))
-    print("Generated Program: ", b.gen_program)
-    print("Evaluated program: ", b.prog_eval)
+    print("with given program")
+    print('My program:  ', victories1 / (victories1 + victories2))
+    print('Given Program:', victories2 / (victories1 + victories2))
+
+
+    print("##################################")
+
+
+    print("Generated Program: ",b.prog_generated)
+    print("Evaluated program: ",b.prog_eval)
+    end = time.time()
     print(end - start, ' seconds')

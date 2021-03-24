@@ -203,7 +203,7 @@ class Times(Node):
     def interpret(self, env):
         return self.left.interpret(env) * self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
         if(size<8):
             temp = []
             for x in range(0,len(plist)):
@@ -234,7 +234,7 @@ class Minus(Node):
     def interpret(self, env):
         return self.left.interpret(env) - self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
 
             temp = []
             for x in range(0,len(plist)):
@@ -260,7 +260,7 @@ class Plus(Node):
     def interpret(self, env):
         return self.left.interpret(env) + self.right.interpret(env)
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
 
             temp = []
             for x in range(0,len(plist)):
@@ -287,13 +287,13 @@ class Function(Node):
     def interpret(self, env):
         return lambda x : self.expression.interpret_local_variables(env, x)
 
-    def grow( plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
         temp=[]
         for i in range(0, len(plist)):
-            if(  not isinstance(plist[i], Argmax) and not isinstance(plist[i],Function)and not isinstance(plist[i],Map)):
+            if(not isinstance(plist[i],Function) and not isinstance(plist[i],Map)):
             #if(isinstance(plist[i],Times) or isinstance(plist[i],Plus) or isinstance(plist[i],Minus)or isinstance(plist[i],Sum)  and plist[i].size-1==size):
                 x=Function(plist[i])
-                if(x.size<=10):
+                if(x.size==size):
                     new_plist.append(x)
 
 
@@ -309,11 +309,11 @@ class Argmax(Node):
     def interpret(self, env):
         return np.argmax(self.list.interpret(env))
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
             for i in range(0, len(plist)):
                 if ((isinstance(plist[i], Map) or isinstance(plist[i],VarList)) ):
                     x=Argmax(plist[i])
-                    if (x.size <= 10):
+                    if (x.size == size):
                         new_plist.append(x)
 
 class Sum(Node):
@@ -328,11 +328,11 @@ class Sum(Node):
     def interpret(self, env):
         return np.sum(self.list.interpret(env))
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
             for i in range(0, len(plist)):
                 if (isinstance(plist[i], Map)):
                     x=Sum(plist[i])
-                    if (x.size <= 10):
+                    if (x.size == size):
                         new_plist.append(x)
 
 
@@ -362,19 +362,19 @@ class Map(Node):
         
         return list(map(self.function.interpret(env), self.list.interpret(env)))
 
-    def grow(plist, new_plist, dict, size, marker):
+    def grow(plist, new_plist,  size):
             temp1=[]
             temp2=[]
             for i in range(0, len(plist)):
                 if(isinstance(plist[i],Function)):
                         x=Map(plist[i], VarList("neutrals"))
-                        if (x.size <= 10):
+                        if (x.size == size):
                             new_plist.append(x)
                         x=Map(plist[i], VarList("actions"))
-                        if (x.size <= 10):
+                        if (x.size == size):
                             new_plist.append(x)
                         x=Map(plist[i], None)
-                        if (x.size <= 10):
+                        if (x.size == size):
                             new_plist.append(x)
 
 
